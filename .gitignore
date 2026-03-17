@@ -1,10 +1,28 @@
-/.DS_Store
-/.vibe/
-/target/
-/cortex-proxy.toml
+# OS files
+.DS_Store
+**/.DS_Store
+
+# Vibe editor config
+.vibe/
+
+# Config with secrets (use .example.toml as template)
+cortex-proxy.toml
+config.toml
+
+# Logs
 *.log
 
 # Rust build artifacts
+target/
 **/target/
 *.rlib
 *.rmeta
+
+# Pixi environment (large, ~3.5GB)
+.pixi/
+
+# Distribution binaries (built separately)
+dist/
+
+# Policy server (if running locally)
+policies.toml

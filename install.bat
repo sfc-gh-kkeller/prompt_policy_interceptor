@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "REPO=sfc-gh-kkeller/snowflake_cortex_ai_proxy"
+set "REPO=sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server"
 set "APP=cortex-proxy"
 set "BIN_DIR=%USERPROFILE%\bin"
 set "CONFIG_DIR=%USERPROFILE%\.config\cortex-proxy"

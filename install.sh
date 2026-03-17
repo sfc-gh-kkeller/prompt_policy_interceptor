@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-REPO="sfc-gh-kkeller/snowflake_cortex_ai_proxy"
+REPO="sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server"
 APP="cortex-proxy"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cortex-proxy"

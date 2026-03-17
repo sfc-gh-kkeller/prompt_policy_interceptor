@@ -875,7 +875,15 @@ async fn openai_handler(State(state): State<Arc<AppState>>, req: Request<Body>) 
     };
     
     let (transformed, is_streaming) = transform_openai(&body, &state.model_map);
-    let url = format!("{}{}", state.base_url, path);
+    let normalized_path = if path.starts_with("/v1/") { &path[3..] } else { &path };
+    let normalized_path = if normalized_path.starts_with("chat/") {
+        format!("/{}", normalized_path)
+    } else if normalized_path.starts_with('/') {
+        normalized_path.to_string()
+    } else {
+        format!("/{}", normalized_path)
+    };
+    let url = format!("{}{}", state.base_url, normalized_path);
     let accept = if is_streaming { "text/event-stream" } else { "application/json" };
     
     let resp = match state.client.request(method, &url)
