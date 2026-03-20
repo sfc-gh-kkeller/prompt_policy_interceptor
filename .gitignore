@@ -7,6 +7,7 @@
 
 # Config with secrets (use .example.toml as template)
 cortex-proxy.toml
+interceptor.toml
 config.toml
 
 # Old architecture image (kept locally, not in repo)

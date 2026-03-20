@@ -1,6 +1,6 @@
-## Snowflake Cortex AI Agent Compatibility Proxy
+## Prompt Policy Interceptor
 
-A high-performance Rust proxy that lets any AI coding agent (Claude Code, OpenCode, ZeroClaw, Continue.dev, Mistral Vibe, etc.) use Snowflake Cortex AI models — or any other LLM backend (OpenAI, Anthropic, Ollama).
+A high-performance Rust proxy that lets any AI coding agent (Claude Code, OpenCode, ZeroClaw, Continue.dev, Mistral Vibe, etc.) use any LLM backend — Snowflake Cortex, OpenAI, Anthropic, or Ollama — with optional policy enforcement.
 
 ### What it does
 
@@ -37,7 +37,7 @@ A high-performance Rust proxy that lets any AI coding agent (Claude Code, OpenCo
                                agent       agent
           │           │           │          │          │
 ┌─────────▼───────────▼───────────▼──────────▼──────────▼─────────────┐
-│                         CORTEX PROXY (port 8766)                     │
+│                         INTERCEPTOR (port 8766)                       │
 │                                                                      │
 │  ┌────────────────────────────────────────────────────────────────┐  │
 │  │              Policy Enforcement Engine (optional)               │  │
@@ -90,7 +90,7 @@ A high-performance Rust proxy that lets any AI coding agent (Claude Code, OpenCo
 #### macOS / Linux
 
 ```bash
-curl -sSLO https://raw.githubusercontent.com/sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server/main/install.sh
+curl -sSLO https://raw.githubusercontent.com/sfc-gh-kkeller/prompt_policy_interceptor/main/install.sh
 chmod +x install.sh
 ./install.sh
 ```
@@ -98,39 +98,39 @@ chmod +x install.sh
 #### Windows (PowerShell)
 
 ```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server/main/install.bat" -OutFile "install.bat"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/sfc-gh-kkeller/prompt_policy_interceptor/main/install.bat" -OutFile "install.bat"
 .\install.bat
 ```
 
-After install, edit the config at `~/.config/cortex-proxy/config.toml` and set your Snowflake `base_url`, `pat`, and `default_model`.
+After install, edit the config at `~/.config/interceptor/config.toml` and set your Snowflake `base_url`, `pat`, and `default_model`.
 
 ### Manual install
 
-Download the bundle for your platform from [GitHub Releases](https://github.com/sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server/releases):
+Download the bundle for your platform from [GitHub Releases](https://github.com/sfc-gh-kkeller/prompt_policy_interceptor/releases):
 
 | Platform | Download |
 |----------|----------|
-| **macOS ARM64** | `cortex-proxy-v1.1.0-macos-arm64.tar.gz` |
-| **macOS Intel** | `cortex-proxy-v1.1.0-macos-x64.tar.gz` |
-| **Linux x64** | `cortex-proxy-v1.1.0-linux-x64.tar.gz` |
-| **Linux ARM64** | `cortex-proxy-v1.1.0-linux-arm64.tar.gz` |
-| **Windows x64** | `cortex-proxy-v1.1.0-windows-x64.tar.gz` |
-| **Windows ARM64** | `cortex-proxy-v1.1.0-windows-arm64.tar.gz` |
+| **macOS ARM64** | `interceptor-v1.1.0-macos-arm64.tar.gz` |
+| **macOS Intel** | `interceptor-v1.1.0-macos-x64.tar.gz` |
+| **Linux x64** | `interceptor-v1.1.0-linux-x64.tar.gz` |
+| **Linux ARM64** | `interceptor-v1.1.0-linux-arm64.tar.gz` |
+| **Windows x64** | `interceptor-v1.1.0-windows-x64.tar.gz` |
+| **Windows ARM64** | `interceptor-v1.1.0-windows-arm64.tar.gz` |
 
-Each bundle includes the binary, `cortex-proxy.example.toml`, and `policies.toml`.
+Each bundle includes the binary, `interceptor.example.toml`, and `policies.toml`.
 
 Steps:
-1. Download and extract: `tar xzf cortex-proxy-v1.1.0-<platform>.tar.gz`
+1. Download and extract: `tar xzf interceptor-v1.1.0-<platform>.tar.gz`
 2. Move binary to a directory on your PATH (`~/.local/bin` or `/usr/local/bin`)
-3. Create config: `~/.config/cortex-proxy/config.toml`
-4. Copy from `cortex-proxy.example.toml` and set your credentials
-5. Run: `cortex-proxy`
+3. Create config: `~/.config/interceptor/config.toml`
+4. Copy from `interceptor.example.toml` and set your credentials
+5. Run: `interceptor`
 
 ---
 
 ### Configuration
 
-Create a config file (**do not commit your API keys**). Default location: `~/.config/cortex-proxy/config.toml`
+Create a config file (**do not commit your API keys**). Default location: `~/.config/interceptor/config.toml`
 
 #### Backend Selection
 
@@ -245,7 +245,7 @@ api_key = "sk-ant-..."
 
 #### Full Cortex Config Example
 
-Sample `cortex-proxy.toml` (Cortex backend):
+Sample `interceptor.toml` (Cortex backend):
 
 ```toml
 [proxy]
@@ -306,31 +306,31 @@ force_agent_backend = true   # route ALL traffic through agent:run
 Run the proxy:
 
 ```bash
-cortex-proxy
+interceptor
 # Or with explicit config:
-cortex-proxy --config /path/to/config.toml
+interceptor --config /path/to/config.toml
 ```
 
 ### Config search order
 
 1. `--config <path>` CLI flag (recommended)
-2. `CORTEX_PROXY_CONFIG` environment variable
-3. `~/Library/Application Support/cortex-proxy/config.toml` (macOS)
-4. `~/.config/cortex-proxy/config.toml` (Linux)
-5. `./cortex-proxy.toml` (current directory)
+2. `INTERCEPTOR_CONFIG` environment variable
+3. `~/Library/Application Support/interceptor/config.toml` (macOS)
+4. `~/.config/interceptor/config.toml` (Linux)
+5. `./interceptor.toml` (current directory)
 
 Policy rules (`policies.toml`) are searched in:
 
 1. `./policies.toml` (current directory)
-2. `~/.config/cortex-proxy/policies.toml`
+2. `~/.config/interceptor/policies.toml`
 
 ### Environment variables
 
-The proxy itself only reads `CORTEX_PROXY_CONFIG`. Most clients still require an API key env var, but the proxy ignores it.
+The proxy itself only reads `INTERCEPTOR_CONFIG`. Most clients still require an API key env var, but the proxy ignores it.
 
 ```bash
 # Proxy config (optional if using default search order)
-export CORTEX_PROXY_CONFIG=/path/to/config.toml
+export INTERCEPTOR_CONFIG=/path/to/config.toml
 
 # Anthropic-compatible clients (Claude Code, etc.)
 export ANTHROPIC_BASE_URL=http://localhost:8766
@@ -842,7 +842,7 @@ pixi run python test_proxy.py --skip-agent
 
 ```bash
 pixi run cargo build --release --manifest-path cortex-proxy-rs/Cargo.toml
-# Binary at: cortex-proxy-rs/target/release/cortex-proxy
+# Binary at: cortex-proxy-rs/target/release/interceptor
 ```
 
 ### Project structure
@@ -852,7 +852,7 @@ cortex-proxy-rs/           # Rust source
 ├── src/main.rs            # All proxy logic (~1900 lines)
 ├── Cargo.toml
 ├── target/release/        # Compiled binary
-cortex-proxy.example.toml  # Template config
+interceptor.example.toml  # Template config
 policies.toml              # Security policy rules (6 rules)
 policy-server/
 └── server.py              # FastAPI policy management server
@@ -879,10 +879,10 @@ install.bat                # Windows installer
 ### Troubleshooting
 
 **Proxy loads wrong config file**
-Use `--config /path/to/cortex-proxy.toml` explicitly. The proxy prints which config it loaded at startup.
+Use `--config /path/to/interceptor.toml` explicitly. The proxy prints which config it loaded at startup.
 
 **Policy rules show 0 active**
-Check that `policies.toml` is in the current working directory or `~/.config/cortex-proxy/`. The proxy only loads rules from the file if the `[policy]` section in the main config has no inline `[policy.rules.*]`.
+Check that `policies.toml` is in the current working directory or `~/.config/interceptor/`. The proxy only loads rules from the file if the `[policy]` section in the main config has no inline `[policy.rules.*]`.
 
 **Agent:run returns 401**
 Verify `login_name` and `account_name` are set in the config. These are required for PAT→session token exchange.

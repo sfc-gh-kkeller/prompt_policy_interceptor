@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Multi-backend integration tests for cortex-proxy.
+"""Multi-backend integration tests for interceptor.
 
 Tests Cortex, Ollama, Anthropic, and OpenAI backends with both client formats.
 Verifies non-streaming, streaming, model mapping, and policy enforcement.
@@ -27,18 +27,26 @@ except ImportError:
 
 PROXY_BINARY = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "cortex-proxy-rs", "target", "release", "cortex-proxy",
+    "cortex-proxy-rs", "target", "release", "interceptor",
 )
 
-CORTEX_CONFIG_PATH = os.path.expanduser(
-    "~/Library/Application Support/cortex-proxy/config.toml"
-)
+CONFIG_PATHS = [
+    os.path.expanduser("~/Library/Application Support/interceptor/config.toml"),
+    os.path.expanduser("~/.config/interceptor/config.toml"),
+    os.path.expanduser("~/Library/Application Support/cortex-proxy/config.toml"),
+    os.path.expanduser("~/.config/cortex-proxy/config.toml"),
+]
 
 
 def load_snowflake_config():
-    if not os.path.exists(CORTEX_CONFIG_PATH):
+    config_path = None
+    for p in CONFIG_PATHS:
+        if os.path.exists(p):
+            config_path = p
+            break
+    if config_path is None:
         return None
-    with open(CORTEX_CONFIG_PATH, "rb") as f:
+    with open(config_path, "rb") as f:
         cfg = tomllib.load(f)
     sf = cfg.get("snowflake", {})
     if not sf.get("base_url") or not sf.get("pat"):
@@ -594,7 +602,7 @@ def main():
 
     if not os.path.exists(PROXY_BINARY):
         print(f"❌ Binary not found at {PROXY_BINARY}")
-        print("   Run: cargo build --release --manifest-path cortex-proxy-rs/Cargo.toml")
+        print("   Run: cargo build --release --manifest-path cortex-proxy-rs/Cargo.toml (binary: interceptor)")
         sys.exit(1)
 
     sf_cfg = load_snowflake_config()

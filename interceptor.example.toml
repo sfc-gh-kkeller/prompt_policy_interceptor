@@ -1,12 +1,12 @@
-# Cortex Proxy Configuration (example)
+# Interceptor Configuration (example)
 #
 # Copy to one of:
-#   - ~/.config/cortex-proxy/config.toml (recommended)
-#   - ./cortex-proxy.toml
+#   - ~/.config/interceptor/config.toml (recommended)
+#   - ./interceptor.toml
 #   - ./config.toml
 #
-# Or specify with: cortex-proxy --config /path/to/config.toml
-# Or environment: CORTEX_PROXY_CONFIG=/path/to/config.toml
+# Or specify with: interceptor --config /path/to/config.toml
+# Or environment: INTERCEPTOR_CONFIG=/path/to/config.toml
 
 [proxy]
 # Port to listen on

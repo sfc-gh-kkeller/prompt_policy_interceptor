@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="Cortex Proxy Policy Server", version="1.0.0")
+app = FastAPI(title="Interceptor Policy Server", version="1.0.0")
 
 POLICY_PATH = Path(__file__).parent.parent / "policies.toml"
 

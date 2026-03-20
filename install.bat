@@ -1,12 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set "REPO=sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server"
-set "APP=cortex-proxy"
+set "REPO=sfc-gh-kkeller/prompt_policy_interceptor"
+set "APP=interceptor"
 set "BIN_DIR=%USERPROFILE%\bin"
-set "CONFIG_DIR=%USERPROFILE%\.config\cortex-proxy"
+set "CONFIG_DIR=%USERPROFILE%\.config\interceptor"
 set "CONFIG_FILE=%CONFIG_DIR%\config.toml"
-set "EXAMPLE_CONFIG=cortex-proxy.example.toml"
+set "EXAMPLE_CONFIG=interceptor.example.toml"
 
 where powershell >nul 2>&1
 if errorlevel 1 (
@@ -26,7 +26,7 @@ if "%TAG%"=="" (
 set "ASSET=%APP%-v%TAG:~1%-windows-%ARCH%.zip"
 set "URL=https://github.com/%REPO%/releases/download/%TAG%/%ASSET%"
 
-set "TMP_DIR=%TEMP%\cortex-proxy-install"
+set "TMP_DIR=%TEMP%\interceptor-install"
 if exist "%TMP_DIR%" rmdir /s /q "%TMP_DIR%"
 mkdir "%TMP_DIR%"
 

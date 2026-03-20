@@ -1,4 +1,4 @@
-//! High-performance Snowflake Cortex Proxy with Tool Support
+//! High-performance LLM inference proxy with policy enforcement
 //!
 //! Supports both:
 //!   - Anthropic API (Claude Code) -> /v1/messages
@@ -229,11 +229,18 @@ fn find_config_path() -> Option<PathBuf> {
             if p.exists() { return Some(p); }
         }
     }
+    if let Ok(path) = env::var("INTERCEPTOR_CONFIG") {
+        let p = PathBuf::from(path);
+        if p.exists() { return Some(p); }
+    }
     if let Ok(path) = env::var("CORTEX_PROXY_CONFIG") {
         let p = PathBuf::from(path);
         if p.exists() { return Some(p); }
     }
     for path_opt in [
+        dirs::config_dir().map(|d| d.join("interceptor/config.toml")),
+        dirs::home_dir().map(|d| d.join(".config/interceptor/config.toml")),
+        Some(PathBuf::from("interceptor.toml")),
         dirs::config_dir().map(|d| d.join("cortex-proxy/config.toml")),
         dirs::home_dir().map(|d| d.join(".config/cortex-proxy/config.toml")),
         Some(PathBuf::from("cortex-proxy.toml")),
@@ -446,7 +453,7 @@ async fn main() {
     let port = config.proxy.port;
     let sf_flag = if state.snowflake_compat { " [snowflake]" } else { "" };
     let mct_flag = if state.use_max_completion_tokens && !state.snowflake_compat { " [max_completion_tokens]" } else { "" };
-    println!("🚀 Cortex Proxy on http://localhost:{} → {}{}{}", port, backend_label, sf_flag, mct_flag);
+    println!("🚀 Interceptor on http://localhost:{} → {}{}{}", port, backend_label, sf_flag, mct_flag);
     println!("   /v1/messages (Anthropic) | /chat/completions (OpenAI)");
     println!();
 
@@ -1255,7 +1262,7 @@ async fn health_handler(State(state): State<Arc<AppState>>) -> impl IntoResponse
     };
     axum::Json(json!({
         "status": "ok",
-        "service": "cortex-proxy",
+        "service": "interceptor",
         "backend": backend_label,
         "default_model": state.default_model,
         "policy": policy_status,
@@ -1302,7 +1309,7 @@ async fn anthropic_handler(
         .header("Content-Type", "application/json")
         .header("Accept", accept)
         .header("Accept-Encoding", "gzip")
-        .header("User-Agent", "cortex-proxy/1.0")
+        .header("User-Agent", "interceptor/1.0")
         .json(&openai_req))
         .send()
         .await
@@ -1583,7 +1590,7 @@ async fn anthropic_passthrough(
         .post(&url)
         .header("Content-Type", "application/json")
         .header("Accept", accept)
-        .header("User-Agent", "cortex-proxy/1.0")
+        .header("User-Agent", "interceptor/1.0")
         .json(&req_body))
         .send()
         .await
@@ -1698,7 +1705,7 @@ async fn openai_handler(State(state): State<Arc<AppState>>, req: Request<Body>) 
         .header("Content-Type", "application/json")
         .header("Accept", accept)
         .header("Accept-Encoding", "gzip")
-        .header("User-Agent", "cortex-proxy/1.0"));
+        .header("User-Agent", "interceptor/1.0"));
     
     if method != Method::GET && method != Method::HEAD && !transformed.is_empty() {
         req_builder = req_builder.body(transformed);
@@ -1764,7 +1771,7 @@ async fn openai_to_anthropic_backend(
         .post(&url)
         .header("Content-Type", "application/json")
         .header("Accept", accept)
-        .header("User-Agent", "cortex-proxy/1.0")
+        .header("User-Agent", "interceptor/1.0")
         .json(&anthropic_req))
         .send()
         .await

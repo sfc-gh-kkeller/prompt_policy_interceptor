@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
-REPO="sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server"
-APP="cortex-proxy"
+REPO="sfc-gh-kkeller/prompt_policy_interceptor"
+APP="interceptor"
 INSTALL_DIR="$HOME/.local/bin"
-CONFIG_DIR="$HOME/.config/cortex-proxy"
+CONFIG_DIR="$HOME/.config/interceptor"
 CONFIG_FILE="$CONFIG_DIR/config.toml"
-EXAMPLE_CONFIG="cortex-proxy.example.toml"
+EXAMPLE_CONFIG="interceptor.example.toml"
 
 require() {
   if ! command -v "$1" >/dev/null 2>&1; then
