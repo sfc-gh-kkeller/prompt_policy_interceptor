@@ -106,24 +106,22 @@ After install, edit the config at `~/.config/cortex-proxy/config.toml` and set y
 
 ### Manual install
 
-Download the binary for your platform from [GitHub Releases](https://github.com/sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server/releases):
+Download the bundle for your platform from [GitHub Releases](https://github.com/sfc-gh-kkeller/snowflake_cortex_inference_prompt_proxy_policy_server/releases):
 
 | Platform | Download |
 |----------|----------|
-| **macOS ARM64** | `cortex-proxy-macos-arm64` |
-| **macOS Intel** | `cortex-proxy-macos-x64` |
-| **Linux x64** | `cortex-proxy-linux-x64` |
-| **Linux ARM64** | `cortex-proxy-linux-arm64` |
-| **Windows x64** | `cortex-proxy-windows-x64.exe` |
-| **Windows ARM64** | `cortex-proxy-windows-arm64.exe` |
+| **macOS ARM64** | `cortex-proxy-v1.1.0-macos-arm64.tar.gz` |
+| **macOS Intel** | `cortex-proxy-v1.1.0-macos-x64.tar.gz` |
+| **Linux x64** | `cortex-proxy-v1.1.0-linux-x64.tar.gz` |
+| **Linux ARM64** | `cortex-proxy-v1.1.0-linux-arm64.tar.gz` |
+| **Windows x64** | `cortex-proxy-v1.1.0-windows-x64.tar.gz` |
+| **Windows ARM64** | `cortex-proxy-v1.1.0-windows-arm64.tar.gz` |
 
-**Bundles with example config:**
-- `cortex-proxy-linux-x64-bundle.tar.gz`
-- `cortex-proxy-linux-arm64-bundle.tar.gz`
+Each bundle includes the binary, `cortex-proxy.example.toml`, and `policies.toml`.
 
 Steps:
-1. Download and extract the binary
-2. Move to a directory on your PATH (`~/.local/bin` or `/usr/local/bin`)
+1. Download and extract: `tar xzf cortex-proxy-v1.1.0-<platform>.tar.gz`
+2. Move binary to a directory on your PATH (`~/.local/bin` or `/usr/local/bin`)
 3. Create config: `~/.config/cortex-proxy/config.toml`
 4. Copy from `cortex-proxy.example.toml` and set your credentials
 5. Run: `cortex-proxy`
@@ -186,6 +184,63 @@ default_model = "claude-sonnet-4-20250514"
 type = "ollama"
 base_url = "http://localhost:11434/v1"
 default_model = "llama3.1"
+```
+
+**Snowflake Cortex via OpenAI backend** (useful for testing or when you want OpenAI-format passthrough):
+```toml
+[backend]
+type = "openai"
+snowflake = true
+base_url = "https://<account>.snowflakecomputing.com/api/v2/cortex/v1"
+api_key = "<YOUR_PAT>"
+default_model = "claude-4-sonnet"
+```
+
+**Snowflake Cortex via Anthropic backend:**
+```toml
+[backend]
+type = "anthropic"
+snowflake = true
+base_url = "https://<account>.snowflakecomputing.com/api/v2/cortex"
+api_key = "<YOUR_PAT>"
+default_model = "claude-4-sonnet"
+```
+
+> **Note:** For Anthropic backend pointing at Snowflake, use the base URL without `/v1` — the proxy appends `/v1/messages` automatically.
+
+#### Backend Options Reference
+
+| Option | Type | Description |
+|---|---|---|
+| `type` | string | Backend type: `cortex`, `openai`, `anthropic`, `ollama` |
+| `base_url` | string | Backend API base URL |
+| `api_key` | string | API key or PAT for authentication |
+| `default_model` | string | Default model when client doesn't specify one |
+| `snowflake` | bool | Enable Snowflake-specific accommodations (auth headers, `max_completion_tokens`, field stripping). Use when pointing OpenAI/Anthropic backends at Snowflake Cortex APIs. |
+| `use_max_completion_tokens` | bool | Send `max_completion_tokens` instead of `max_tokens`. For OpenAI o-series models or other providers that require it. Implied by `snowflake = true`. |
+
+#### Custom Headers
+
+Add arbitrary headers to all backend requests via `[backend.extra_headers]`. Useful for SPCS model endpoints, OpenAI organization IDs, Anthropic beta features, or any custom auth:
+
+```toml
+[backend]
+type = "openai"
+base_url = "https://my-spcs-endpoint.snowflakecomputing.app/v1"
+api_key = "..."
+
+[backend.extra_headers]
+"X-Custom-Auth" = "my-token"
+"OpenAI-Organization" = "org-..."
+```
+
+```toml
+[backend]
+type = "anthropic"
+api_key = "sk-ant-..."
+
+[backend.extra_headers]
+"anthropic-beta" = "output-128k-2025-02-19"
 ```
 
 #### Full Cortex Config Example
@@ -733,29 +788,51 @@ curl -sS http://localhost:8766/chat/completions \
 
 #### Test suite
 
+**Multi-backend integration tests** (28 tests across 4 backends):
+
 ```bash
-pixi run python test_proxy.py
+pixi run python test_backends.py
 ```
 
 Expected output:
 
 ```
-🧪 Testing Cortex Proxy at http://localhost:8766
+🧪 Multi-Backend Integration Tests
 
-  ✓ Health check
-  ✓ Anthropic /v1/messages
-  ✓ OpenAI /v1/chat/completions
-  ✓ Agent:run /agent:run (native)
-  ✓ Anthropic→Agent /v1/messages/agent
-  ✓ OpenAI→Agent /v1/chat/completions/agent
-  ✓ Policy enforcement blocked malicious prompt (HTTP 403)
+  CORTEX BACKEND — http://localhost:8766
+  ✓ Health check (backend=cortex)
+  ✓ OpenAI non-streaming [cortex]
+  ✓ Anthropic non-streaming [cortex]
+  ✓ OpenAI streaming [cortex]
+  ✓ Anthropic streaming [cortex]
+  ✓ Policy block (OpenAI) [cortex]
+  ✓ Policy block (Anthropic) [cortex]
 
-Results: 7 passed, 0 failed, 7 total
+  OLLAMA BACKEND — http://localhost:8767
+  ✓ Health check (backend=ollama)
+  ...(7 tests)
+
+  OPENAI BACKEND (Snowflake Cortex) — port 8768
+  ...(7 tests)
+
+  ANTHROPIC BACKEND (Snowflake Cortex) — port 8769
+  ...(7 tests)
+
+  Results: 28 passed, 0 failed, 0 skipped
 ```
 
-Use `--skip-agent` to skip agent:run tests (useful if `login_name`/`account_name` aren't configured):
+Skip specific backends:
 
 ```bash
+pixi run python test_backends.py --skip-ollama --skip-openai-be --skip-anthropic-be
+```
+
+Ollama tests require Ollama running locally with `qwen3.5:0.8b`. OpenAI/Anthropic backend tests read the PAT from your Cortex config at `~/Library/Application Support/cortex-proxy/config.toml`.
+
+**Basic proxy tests** (Cortex backend only, includes agent:run):
+
+```bash
+pixi run python test_proxy.py
 pixi run python test_proxy.py --skip-agent
 ```
 
@@ -779,7 +856,8 @@ cortex-proxy.example.toml  # Template config
 policies.toml              # Security policy rules (6 rules)
 policy-server/
 └── server.py              # FastAPI policy management server
-test_proxy.py              # Python test client (7 tests)
+test_backends.py           # Multi-backend test suite (28 tests)
+test_proxy.py              # Basic proxy test client (7 tests)
 pixi.toml                  # Pixi environment config
 install.sh                 # macOS/Linux installer
 install.bat                # Windows installer
